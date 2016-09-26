@@ -133,14 +133,7 @@
 					}
 
 					name += '{\"name\":\"' + $(this).text() + '\",\"type\":\"' + type + '\",\"showpdf\":\"' + showpdf + '\",\"taille\":\"' + taille + '\",\"colspan\":\"' + colspan + '\",\"rowspan\":\"' + rowspan + '\",\"aligne\":\"' + aligne + '\",\"display\":\"' + display + '\",\"format\":\"' + format + '\"},';
-
-					/*if ($(this).attr("showpdf") === 'no')
-					{
-						tab_col.push(index_colonne - 1);
-					}*/
-				
-				/*console.log(index_colonne);
-				console.log(tab_show);*/
+					
 				});
 				
 					name = name.substr(0, (name.length - 1)) + "],[";
@@ -171,7 +164,11 @@
 			mydata += "[";
 			
 			for (var i=0; i< $rows[rowIndex]._aFilterData.length; i++) {
-				mydata += '"' + $rows[rowIndex]._aFilterData[i].replace(/\"/g, '') + '",';
+				mydata += '"' + $rows[rowIndex]._aFilterData[i].replace(/\"/g, '')
+																.replace(/\\/g, '\\\\')
+																.replace(/\t/g, ' ')
+																
+																.replace(/\//g, '') + '",';
 			}
 			
 			mydata = mydata.substr(0, mydata.length-1);
@@ -196,11 +193,11 @@
 		var dom_table = $(settings.aanFeatures.t);
 		tId = dom_table.attr('id');
 		
-		if(!dom_table.hasClass('dt-output')) {
+		if(!dom_table.hasClass('dt-output') && !dom_table.hasClass('dt-ofp')) {
 			return;
 		}
 		
-				dom_table.before('<form method="POST" action= "exporttable/export" id="form_output" ENCTYPE="multipart/form-data">'+
+				dom_table.before('<form method="POST" action= "/exporttable/export" id="form_output" ENCTYPE="multipart/form-data">'+
 								'<div><input type=hidden id="'+tId+'_colonne" name="colonne" value = "" >'+
 								'<input type=hidden id="'+tId+'_data" name="data" value = "" >'+
 								'<input type=hidden id="'+tId+'_param" name="param" value = "" >'+

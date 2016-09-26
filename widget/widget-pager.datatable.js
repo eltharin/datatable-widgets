@@ -2,30 +2,42 @@
 	$.fn.dataTable.ext.oPagination.pager = {
 		fnInit : function(oSettings, nPaging, fnCallbackDraw)
 		{
-			this.Init_Pager_Widget(oSettings);
-			this.HtmlProcess(oSettings, nPaging);
-			this.ActionClick(oSettings, fnCallbackDraw);
+			if($(oSettings.nTable).hasClass('dt-pager') || $(oSettings.nTable).hasClass('dt-ofp') || $(oSettings.nTable).hasClass('dt-fp'))
+			{
+				this.Init_Pager_Widget(oSettings);
+				this.HtmlProcess(oSettings, nPaging);
+				this.ActionClick(oSettings, fnCallbackDraw);
+
+			}
+			else
+			{
+				oSettings.oFeatures.bPaginate = false;
+			}
 		},
 
 		fnUpdate : function(oSettings,fnCallbackDraw)
 		{
-			if (!oSettings.aanFeatures.p) {
-					return;
-			}
-			this.MenuLengthVal(oSettings);
-			this.checkPage(oSettings);
-			this.reWriteOptions();
+			if($(oSettings.nTable).hasClass('dt-pager') || $(oSettings.nTable).hasClass('dt-ofp') || $(oSettings.nTable).hasClass('dt-fp'))
+			{
+				if (!oSettings.aanFeatures.p) {
+						return;
+				}
+				this.MenuLengthVal(oSettings);
+				this.checkPage(oSettings);
+				this.reWriteOptions(oSettings);
 
-		
-			
-			this.ActionChange(oSettings,fnCallbackDraw);
-			this.UpdateClass();
+
+
+				this.ActionChange(oSettings,fnCallbackDraw);
+				this.UpdateClass(oSettings);
+			}
 		},
 		
 		Init_Pager_Widget : function(oSettings)
 		{
+
 			var len;
-			this.cPager = {
+			oSettings.cPager = {
 				Html : {
 					table : $(oSettings.aanFeatures.t),
 					tId : '',
@@ -49,20 +61,20 @@
 				hasFirstPageCallback : null,
 				hasLastPageCallback : null
 			};
+
+			oSettings.cPager.val.pages = Math.ceil(oSettings.fnRecordsDisplay() / oSettings.cPager.val.len);
+			oSettings.cPager.val.nbPage = oSettings.cPager.val.all ? 1 : Math.ceil(oSettings.fnRecordsDisplay() / oSettings.cPager.val.len);
+			oSettings.cPager.val.page = oSettings.cPager.val.all ? 0 : Math.ceil( oSettings._iDisplayStart / oSettings.cPager.val.len );
+			oSettings.cPager.Html.tId = oSettings.cPager.Html.table.attr('id');
+			oSettings.cPager.Html.pager.attr('id', "pager"+oSettings.cPager.Html.tId);
+			oSettings.cPager.Html.IFirst.attr('id', oSettings.cPager.Html.tId+"_first_page");
+			oSettings.cPager.Html.IPrevious.attr('id', oSettings.cPager.Html.tId+"_previous_page");
+			oSettings.cPager.Html.INext.attr('id', oSettings.cPager.Html.tId+"_next_page");
+			oSettings.cPager.Html.ILast.attr('id', oSettings.cPager.Html.tId+"_last_page");
+			oSettings.cPager.Html.SPages.attr('id', oSettings.cPager.Html.tId+"_SPages");
 			
-			
-			this.cPager.val.pages = Math.ceil(oSettings.fnRecordsDisplay() / this.cPager.val.len);
-			this.cPager.val.nbPage = this.cPager.val.all ? 1 : Math.ceil(oSettings.fnRecordsDisplay() / this.cPager.val.len);
-			this.cPager.val.page = this.cPager.val.all ? 0 : Math.ceil( oSettings._iDisplayStart / this.cPager.val.len );
-			this.cPager.Html.tId = this.cPager.Html.table.attr('id');
-			this.cPager.Html.pager.attr('id', "pager"+this.cPager.Html.tId);
-			this.cPager.Html.IFirst.attr('id', this.cPager.Html.tId+"_first_page");
-			this.cPager.Html.IPrevious.attr('id', this.cPager.Html.tId+"_previous_page");
-			this.cPager.Html.INext.attr('id', this.cPager.Html.tId+"_next_page");
-			this.cPager.Html.ILast.attr('id', this.cPager.Html.tId+"_last_page");
-			
-			for(var i=1; i <= this.cPager.val.nbPage; i++){
-				this.cPager.Html.SOptions.push($('<option class="paginate_button" value="'+i+'">'+i+'</option>'));
+			for(var i=1; i <= oSettings.cPager.val.nbPage; i++){
+				oSettings.cPager.Html.SOptions.push($('<option class="paginate_button" value="'+i+'">'+i+'</option>'));
 			}
 			
 			
@@ -70,7 +82,7 @@
 		
 		HtmlProcess : function(oSettings, nPaging)
 		{
-			var cPager = this.cPager;
+			var cPager = oSettings.cPager;
 			
 			cPager.Html.pager.appendTo(nPaging);
 			cPager.Html.IFirst.appendTo(cPager.Html.pager);
@@ -89,7 +101,7 @@
 				}
 			};
 			
-			var cPager = this.cPager;
+			var cPager = oSettings.cPager;
 			oSettings.oApi._fnBindAction( cPager.Html.IFirst, {action:"first"}, fnClickHandler );
 			oSettings.oApi._fnBindAction( cPager.Html.IPrevious, {action:"previous"}, fnClickHandler );
 			oSettings.oApi._fnBindAction( cPager.Html.INext, {action:"next"}, fnClickHandler );
@@ -110,7 +122,7 @@
 		
 		checkPage : function (oSettings)
 		{
-			var cPager = this.cPager;
+			var cPager = oSettings.cPager;
 			if(!cPager.val.page > 0){
 				cPager.hasFirstPageCallback = true;
 			}else{
@@ -122,33 +134,33 @@
 				cPager.hasLastPageCallback = true;
 			}
 			
-			this.cPager.val.len = oSettings._iDisplayLength;
-			this.cPager.val.pages = Math.ceil(oSettings.fnRecordsDisplay() / this.cPager.val.len);
-			this.cPager.val.nbPage = this.cPager.val.all ? 1 : Math.ceil(oSettings.fnRecordsDisplay() / this.cPager.val.len);
-			this.cPager.val.page = this.cPager.val.all ? 0 : Math.ceil( oSettings._iDisplayStart / this.cPager.val.len );
+			oSettings.cPager.val.len = oSettings._iDisplayLength;
+			oSettings.cPager.val.pages = Math.ceil(oSettings.fnRecordsDisplay() / oSettings.cPager.val.len);
+			oSettings.cPager.val.nbPage = oSettings.cPager.val.all ? 1 : Math.ceil(oSettings.fnRecordsDisplay() / oSettings.cPager.val.len);
+			oSettings.cPager.val.page = oSettings.cPager.val.all ? 0 : Math.ceil( oSettings._iDisplayStart / oSettings.cPager.val.len );
 			
 		},
 		
-		reWriteOptions : function()
+		reWriteOptions : function(oSettings)
 		{
-			this.cPager.Html.SOptions = [];
+			oSettings.cPager.Html.SOptions = [];
 			
-			for(var i=1; i <= this.cPager.val.nbPage; i++){
-				this.cPager.Html.SOptions.push($('<option class="paginate_button" value="'+i+'">'+i+'</option>'));
+			for(var i=1; i <= oSettings.cPager.val.nbPage; i++){
+				oSettings.cPager.Html.SOptions.push($('<option class="paginate_button" value="'+i+'">'+i+'</option>'));
 			}
 			
-			this.cPager.Html.SPages.children('option').remove();
-			for(var i = 0; i < this.cPager.val.nbPage; i++)
+			oSettings.cPager.Html.SPages.children('option').remove();
+			
+			for(var i = 0; i < oSettings.cPager.val.nbPage; i++)
 			{
-				
-				this.cPager.Html.SOptions[i].appendTo(this.cPager.Html.SPages);
+				$('<option class="paginate_button" value="'+(i+1)+'">'+(i+1)+'</option>').appendTo(oSettings.cPager.Html.SPages);
 			}
-			this.cPager.Html.SPages.children('option').eq(this.cPager.val.page).attr('selected', 'selected');
+			oSettings.cPager.Html.SPages.children('option').eq(oSettings.cPager.val.page).attr('selected', 'selected');
 		},
 		
 		ActionChange : function(oSettings, fnCallbackDraw)
 		{
-			this.cPager.Html.SPages.bind('change', function (e) {
+			oSettings.cPager.Html.SPages.bind('change', function (e) {
 				if ( oSettings.oApi._fnPageChange( oSettings, parseInt($(this).val())-1) )
 				{
 					fnCallbackDraw( oSettings );
@@ -156,9 +168,9 @@
 			});
 		},
 		
-		UpdateClass : function ()
+		UpdateClass : function (oSettings)
 		{
-			var tId = this.cPager.Html.tId;
+			var tId = oSettings.cPager.Html.tId;
 			$('#'+tId+'_first_page').switchClass(this.hasFirstPageCallback, $('#'+tId+'_first_page'), 'disabled');
 			$('#'+tId+'_previous_page').switchClass(this.hasFirstPageCallback, $('#'+tId+'_previous_page'), 'disabled');
 			$('#'+tId+'_next_page').switchClass(this.hasLastPageCallback, $('#'+tId+'_next_page'), 'disabled');
@@ -177,6 +189,21 @@
 				elem.removeClass(disabled);
 			}
 		};
+		
+			
+
+		$(document).keydown(function (event) 
+		{
+         // left arrow
+        if (event.which == 37 && event.shiftKey && event.ctrlKey) {
+            $('.datatable').DataTable().page( 'previous' ).draw( 'page' );                    
+        }
+        // right arrow
+        if (event.which == 39 && event.shiftKey && event.ctrlKey) {
+            $('.datatable').DataTable().page( 'next' ).draw( 'page' );
+        }
+        
+		});
 	})(jQuery);
 	
 })(window, document, jQuery);

@@ -118,8 +118,12 @@
 	// Subscribe the feature plug-in to DataTables, ready for use
 	$.fn.dataTableExt.aoFeatures.push( {
 		"fnInit": function( oSettings ) {
-			var l = new $.fn.dataTable.LengthLinks( oSettings );
-			return l.container[0];
+			if($(oSettings.nTable).hasClass('dt-pager') || $(oSettings.nTable).hasClass('dt-ofp') || $(oSettings.nTable).hasClass('dt-fp'))
+			{
+				var l = new $.fn.dataTable.LengthLinks( oSettings );
+				return l.container[0];
+			}
+			return null;
 		},
 		"cFeature": "L",
 		"sFeature": "LengthLinks"

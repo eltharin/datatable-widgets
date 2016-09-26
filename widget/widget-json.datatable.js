@@ -9,14 +9,18 @@
 	$.fn.dataTable.ext.json = function ( settings ) {
 
 		checkElem(settings);
+		
 		Init_Json_Widget(settings);
+
 		initColumn( settings );
+		
 		setJColumn(settings);
+	
 		setJData( settings);
 	},
 	
-	Init_Json_Widget = function (settings)
-	{
+	Init_Json_Widget = function (settings){
+		
 		settings.json = {
 			jData : settings.oInit.myData,
 			jColumn:[]
@@ -25,14 +29,16 @@
 	},
 	
 	initColumn = function (settings){
-		var jTh = $(settings.nTHead).children('tr').not('.dataTable-research').children('th'), jCol = settings.json.jColumn;
+		var jTh = $(settings.nTHead).children('tr').children('th'), jCol = settings.json.jColumn;
 		
 		$.each(jTh, function(i,v){	
+			
 			if($(v).attr('data_column') === undefined){
 				checkElem(settings, 'jth_d_c', v);
 			}
 
 			jCol.push({mData:$(v).attr('data_column')});
+			
 			
 		});
 	},
@@ -49,7 +55,6 @@
 	
 	setJData = function(settings){
 		var jData = settings.json.jData, arData;
-
 		$.each(jData, function(i, v){
 			
 			arData = {};
@@ -58,7 +63,6 @@
 			});
 			settings.oApi._fnAddData(settings, arData);
 		});
-
 	},
 	
 	checkElem = function(settings, code, elem){
