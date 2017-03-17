@@ -5,16 +5,20 @@ $.fn.dataTable.defaults.oLanguage.sInfoFiltered = " (filtrage sur _MAX_ lignes) 
 $.fn.dataTable.defaults.bStateSave = false; //save filter in session storage or localStorage
 $.fn.dataTable.defaults.sPaginationType = "pager";
 $.fn.dataTable.defaults.lengthMenu = [[10, 25, 50, 100, 250, 500, -1], [10, 25, 50, 100, 250, 500, "All"]];
-$.fn.dataTable.defaults.sDom = "FtipL";
 $.fn.dataTable.defaults.bInfo = true;
 $.fn.dataTable.defaults.ordering = true;
 $.fn.dataTable.defaults.paging = true;
+$.fn.dataTable.defaults.autoWidth = false;
 //$.fn.dataTable.defaults.lengthChange = false;
+$.fn.dataTable.defaults.sDom = "tFipL";
+$.fn.dataTable.defaults.aoColumnDefs=tableRender;
+
 
 
 $(document).on( 'preInit.dt', function (e, oSettings) 
 {
-	if(!$(oSettings.nTable).hasClass('dt-pager') && !$(oSettings.nTable).hasClass('dt-ofp') || $(oSettings.nTable).hasClass('dt-fp'))
+	datatableSettings = oSettings;
+	if(!$(oSettings.nTable).hasClass('dt-pager') && !$(oSettings.nTable).hasClass('dt-ofp') && !$(oSettings.nTable).hasClass('dt-fp'))
 	{
 		$('#'+oSettings.sTableId+'_info').remove();
 		$('#'+oSettings.sTableId+'_paginate').remove();
@@ -29,21 +33,24 @@ $(document).on( 'preInit.dt', function (e, oSettings)
 	{
 		new $.fn.dataTable.ext.json(oSettings);
 	}
+	
 	if($(oSettings.nTable).hasClass('dt-filter') || $(oSettings.nTable).hasClass('dt-fp') || $(oSettings.nTable).hasClass('dt-ofp'))
 	{
 		new $.fn.dataTable.ext.filter(oSettings);
 	}
-	
+	if($(oSettings.nTable).hasClass('dt-totalizer'))
+	{
+		new $.fn.dataTable.ext.numColFooter(oSettings);
+	}
 });	
-	
+
 $(document).off('plugin-init.dt').on( 'plugin-init.dt', function (e, oSettings) 
 {
-	//RewriteHeader($('.datatable'));
 	if($(oSettings.nTable).hasClass('dt-output') || $(oSettings.nTable).hasClass('dt-ofp'))
 	{
 		new $.fn.dataTable.ext.output(oSettings);
 	}
-} );
+});
 
 $(document).on( 'draw.dt', function (e, oSettings) 
 {
@@ -51,67 +58,99 @@ $(document).on( 'draw.dt', function (e, oSettings)
 	{
 		new $.fn.dataTable.ext.totalizer(oSettings);
 	}
-
-} );
+});
 
 jQuery.extend( jQuery.fn.dataTableExt.type.search, {
-		date: function ( data ) {
+		date: function ( data ) 
+		{
 			return data.replace( /[\r\n]/g, " " )
-						.replace( /<.*>/g, "" );
+					   .replace( /<([^>]*)>/g, "" );
 		}
 	} );
 	
 
-jQuery.extend( jQuery.fn.dataTableExt.oSort, {
-"date-pre": function ( date ) {
-	
-var date = date.replace(" ", "").replace( /<.*?>/g, "" );
-if(date.length > 0)
+jQuery.extend( jQuery.fn.dataTableExt.oSort, 
 {
-	if (date.indexOf('.') > 0) {var eu_date = date.split('.');} 
-	else if (date.indexOf('-') > 0) {var eu_date = date.split('-');} 
-	else {var eu_date = date.split('/');}
-
-	/*year*/
-	if (eu_date[2]) 
+	"date-pre": function ( date ) 
 	{
-		var year = eu_date[2];
-	} 
-	else 
-	{
-		var year = '0000';
-	}
-	
-	/*month*/
-	if (eu_date[1]) 
-	{
-		var month = eu_date[1];
-		if (month.length == 1) 
+		var date = date.replace(" ", "").replace( /<.*?>/g, "" );
+		if(date.length > 0)
 		{
-			month = "0" + month;
+			if (date.indexOf('.') > 0) {var eu_date = date.split('.');} 
+			else if (date.indexOf('-') > 0) {var eu_date = date.split('-');} 
+			else {var eu_date = date.split('/');}
+
+			/*year*/
+			if (eu_date[2]) 
+			{
+				var year = eu_date[2];
+			} 
+			else 
+			{
+				var year = '0000';
+			}
+
+			/*month*/
+			if (eu_date[1]) 
+			{
+				var month = eu_date[1];
+				if (month.length === 1) 
+				{
+					month = "0" + month;
+				}
+			} 
+			else 
+			{
+				var month = '00';
+			}
+
+			/*day*/
+			var day = eu_date[0];
+			if (day.length === 1) 
+			{
+				day = "0" + day;
+			}
+
+			return (year + '-' + month + '-' + day);
 		}
-	} 
-	else 
+
+		return ('0000-00-00');
+	},
+	"date-asc": function ( a, b ) 
 	{
-		var month = '00';
-	}
-	
-	
-	/*day*/
-	var day = eu_date[0];
-	if (day.length == 1) 
+		return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+	},
+	"date-desc": function ( a, b ) 
 	{
-		day = "0" + day;
+		return ((a < b) ? 1 : ((a > b) ? -1 : 0));
 	}
-	
-	return (year + '-' + month + '-' + day);
-}
-return ('0000-00-00');
-},
-"date-asc": function ( a, b ) {
-return ((a < b) ? -1 : ((a > b) ? 1 : 0));
-},
-"date-desc": function ( a, b ) {
-return ((a < b) ? 1 : ((a > b) ? -1 : 0));
-}
 });
+
+$.fn.dataTableExt.ofnSearch['date'] = function ( date ) {
+return date.replace( /<.*?>/g, "" );
+};
+
+
+//--- Datatable new functions 
+$.fn.dataTableExt.oApi.fnLoadHTML = function ( oSettings,data)
+{
+	oSettings.oApi._fnClearTable(oSettings);
+	oSettings.oApi._fnAddTr(oSettings,data);
+	oSettings.oApi._fnReDraw(oSettings,true);
+};
+
+$.fn.dataTableExt.oApi.fnLoadJSON = function ( oSettings,data)
+{
+	try 
+	{ 
+		data = $.parseJSON(data); 
+	} 
+	catch(err)  
+	{ 
+		console.log(err);
+	}  
+	oSettings.oApi._fnClearTable(oSettings);
+	oSettings.oApi._fnAjaxUpdateDraw(oSettings,{data:data});
+	oSettings.oApi._fnReDraw(oSettings,true);
+};
+
