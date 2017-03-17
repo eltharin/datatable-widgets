@@ -33,11 +33,11 @@
 		
 		$.each(jTh, function(i,v){	
 			
-			if($(v).attr('data_column') === undefined){
+			if($(v).attr('data-column') === undefined){
 				checkElem(settings, 'jth_d_c', v);
 			}
 
-			jCol.push({mData:$(v).attr('data_column')});
+			jCol.push({mData:$(v).attr('data-column')});
 			
 			
 		});
@@ -83,7 +83,7 @@
 		
 		if(code === 'jth_d_c')
 		{
-			return jQuery.error("wjson : data_column is "+ $(elem).attr('data_column')+" for header cell : \""+elem.innerHTML+"\"");
+			return jQuery.error("wjson : data-column is "+ $(elem).attr('data-column')+" for header cell : \""+elem.innerHTML+"\"");
 		}
 	};
 
