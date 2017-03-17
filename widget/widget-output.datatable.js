@@ -64,7 +64,7 @@
 					}
 					
 					var taille = 0;
-					var aligne = "";
+					var align = "";
 					var format = "";
 					var colspan = "";
 					var rowspan = "";
@@ -74,10 +74,10 @@
 
 
 
-					if ($(this).attr("aligne") === undefined) {
-						aligne = "C";
+					if ($(this).attr("align") === undefined) {
+						align = "L";
 					} else {
-						aligne = $(this).attr("aligne");
+						align = $(this).attr("align");
 					}
 
 					if ($.isNumeric($(this).attr("colspan")) === false) {
@@ -98,10 +98,14 @@
 						format = $(this).attr("format");
 					}
 
-					if ($(this).attr("showpdf") === undefined) {
-						showpdf = "";
+					if ($(this).data("print") === undefined) {
+						if ($(this).attr("showpdf") === undefined) {
+							showpdf = "";
+						} else {
+							showpdf = $(this).attr("showpdf");
+						}	
 					} else {
-						showpdf = $(this).attr("showpdf");
+						showpdf = $(this).data("print");
 					}						
 
 					if ($(this).attr("type") === undefined) {
@@ -110,19 +114,25 @@
 						type = $(this).attr("type");
 					}
 
-					if ($(this).attr("taille") === undefined) 
+					if ($(this).data("size") === undefined) 
 					{
-						if(colspan > 1)
+						if ($(this).attr("taille") === undefined) 
 						{
-							taille = "";
-						}
-						else
-						{
-							taille = "20";
-						}
+							if(colspan > 1)
+							{
+								taille = "";
+							}
+							else
+							{
+								taille = "20";
+							}
+
+						} else {
+							taille = $(this).attr("taille");
+						}	
 
 					} else {
-						taille = $(this).attr("taille");
+						taille = $(this).data("size");
 					}								   
 
 
@@ -132,7 +142,7 @@
 						display = 'none';
 					}
 
-					name += '{\"name\":\"' + $(this).text() + '\",\"type\":\"' + type + '\",\"showpdf\":\"' + showpdf + '\",\"taille\":\"' + taille + '\",\"colspan\":\"' + colspan + '\",\"rowspan\":\"' + rowspan + '\",\"aligne\":\"' + aligne + '\",\"display\":\"' + display + '\",\"format\":\"' + format + '\"},';
+					name += '{\"name\":\"' + $(this).text() + '\",\"type\":\"' + type + '\",\"showpdf\":\"' + showpdf + '\",\"taille\":\"' + taille + '\",\"colspan\":\"' + colspan + '\",\"rowspan\":\"' + rowspan + '\",\"align\":\"' + align + '\",\"display\":\"' + display + '\",\"format\":\"' + format + '\"},';
 					
 				});
 				
@@ -148,8 +158,7 @@
 	},
 	
 	body = function ( settings, $rows, tab_col) {
-		var $cell, $cells, cellsLen, rowIndex, indx, cellIndex, mydata = [], rowIndextrue, $rows, id_col, index_colonne, rowsLength;
-		
+		var rowIndex, mydata = [], rowIndextrue, $rows, id_col, index_colonne, rowsLength;
 		rowIndextrue = 0;
 		id_col = 0;
 		index_colonne = 0;
@@ -158,17 +167,66 @@
 		rowIndextrue = 0;
 		
 		mydata = "[";
-	
+
+
+
 		for (rowIndex = 0; rowIndex < rowsLength; rowIndex++) 
 		{
 			mydata += "[";
 			
-			for (var i=0; i< $rows[rowIndex]._aFilterData.length; i++) {
-				mydata += '"' + $rows[rowIndex]._aFilterData[i].replace(/\"/g, '')
-																.replace(/\\/g, '\\\\')
-																.replace(/\t/g, ' ')
-																
-																.replace(/\//g, '') + '",';
+			if(jQuery.type($rows[rowIndex]._aData) === 'object')
+			{
+				for (var i=0; i< $(settings.aoColumns).length; i++) 
+				{
+					
+					if($rows[rowIndex]._aData[settings.aoColumns[i].data])
+					{
+						if($rows[rowIndex]._aData[settings.aoColumns[i].data] === null)
+						{
+							mydata += '"' + '",';
+						}
+						else
+						{
+							data = $rows[rowIndex]._aData[settings.aoColumns[i].data];
+							if(settings.aoColumns[i].mRender !== null)
+							{
+								data = settings.aoColumns[i].render.display(data);
+							}
+							mydata += '"' + data.replace( /<([^>]*)>/g, "" )
+												.replace(/\"/g, '')
+												.replace(/\\/g, '\\\\')
+												.replace(/\t/g, ' ')
+												.replace(/\r\n/g, '</br>')
+												.replace(/\r/g, '</br>')
+												.replace(/\n/g, '</br>')
+												.replace(/\//g, '\\\/') + '",';							
+						}
+					}
+					else
+					{
+						mydata += '"' + '",';
+					}
+				}
+			}
+			else
+			{
+				for (var i=0; i< $rows[rowIndex]._aData.length; i++) 
+				{
+					data = $rows[rowIndex]._aData[i];
+					if(settings.aoColumns[i].mRender !== null)
+					{
+						data = settings.aoColumns[i].render.display(data);
+					}			
+						mydata += '"' + data.replace( /<([^>]*)>/g, "" )
+											.replace(/\"/g, '')
+											.replace(/\\/g, '\\\\')
+											.replace(/\t/g, ' ')
+											.replace(/\r\n/g, '</br>')
+											.replace(/\r/g, '</br>')
+											.replace(/\n/g, '</br>')
+											.replace(/\//g, '\\\/') + '",';
+			
+				}
 			}
 			
 			mydata = mydata.substr(0, mydata.length-1);
@@ -185,11 +243,10 @@
 	{
 		
 		var mydonnee, tId;
-		if(settings.aanFeatures.t.length == 0) {
+		if(settings.aanFeatures.t.length === 0) {
 			return;
 		}
-		
-		
+
 		var dom_table = $(settings.aanFeatures.t);
 		tId = dom_table.attr('id');
 		
@@ -197,53 +254,101 @@
 			return;
 		}
 		
-				dom_table.before('<form method="POST" action= "/exporttable/export" id="form_output" ENCTYPE="multipart/form-data">'+
-								'<div><input type=hidden id="'+tId+'_colonne" name="colonne" value = "" >'+
+		dom_table.before('<form method="POST" action= "/exporttable/export" id="form_output" ENCTYPE="multipart/form-data">'+
+								'<input type=hidden id="'+tId+'_colonne" name="colonne" value = "" >'+
 								'<input type=hidden id="'+tId+'_data" name="data" value = "" >'+
 								'<input type=hidden id="'+tId+'_param" name="param" value = "" >'+
 								'<input type=hidden id="'+tId+'_titre" name="titre" value = "" >'+
 								'<input type=hidden id="'+tId+'_type" name="type" value = "" >'+
-								'<input type="submit" id="'+tId+'_form_xl" value="Format XL" Forid="excel" class="format bouton_bleu">'+
-								'<input type="submit" id="'+tId+'_form_pdf" value="Format PDF" Forid="pdf" class="format bouton_bleu"></div></form>');
-				var styles;
-				styles = {"margin": "3px 4px"};
-				$('#form_pdf').css(styles);
-				$('#form_xl').css(styles);
-				pdf_title = dom_table.attr('pdf_title');
-				pdf_param = dom_table.attr('pdf_param');
+								'<div id="export">'+
+								'<div id="block" style="min-height: 50px;min-width: 200px;height: auto;width: auto;overflow: hidden;position: absolute;'+
+								'background-color: lightgrey;border-radius: 5px;padding: 10px;border: 2px solid black;margin-top: 25px;margin-left: 2px;display: none;">'+
+								
+								'<div id="choix">'+
+								'<input type="radio" class="form_export" name="type_exp"  value="xl" checked> Excel'+
+								'<input type="radio" class="form_export" name="type_exp" value="pdf"> Pdf'+
+								'<hr></div>'+
+								'Prendre les valeurs nulles : '+
+								'<input type="radio" name="valeurs" value="1" checked> Oui'+
+								'<input type="radio" name="valeurs" value="0"> Non<br><hr>'+
+								'<div id="xl" style="display:none;">'+
+								'</div>'+
+								'<div id="pdf" style="display:none;">'+
+								'Parametrage : '+
+								'<input type="radio" class="parametrage" name="param" value="auto" checked> auto'+
+								'<input type="radio" class="parametrage" name="param" value="mano"> manuel <br>'+
+								'Orientation : '+
+								'<input type="radio" name="orientation" class="disabler" value="L" checked disabled> paysage'+
+								'<input type="radio" name="orientation" class="disabler" value="P" disabled> portrait <br>'+
+								'type taille: '+
+								'<input type="radio" name="type_taille" class="disabler" value="A4" checked disabled> A4'+
+								'<input type="radio" name="type_taille" class="disabler" value="A3" disabled> A3<br>'+
+								'</div></div>'+
+								'<input type="submit" id="export_button" style="margin: 0px; border-radius: 50px;border-top-right-radius: 0px;border-bottom-right-radius: 0px;" value="Export xl" class="bouton_bleu">'+
+								'<input type="button" id="param_export" style="width: 20px;background-image: url(/pics/sort_desc.png);margin: 0px; border-radius: 50px; margin-left: 1px;border-top-left-radius: 0px;border-bottom-left-radius: 0px;"  class="bouton_bleu">'+
+								
+								
+								
+								'</form>');
+				var title = dom_table.attr('pdf_title');
+				var param = dom_table.attr('pdf_param');
 
-				if (pdf_title == 'undefined'){pdf_title = '';}
-				if (pdf_param == 'undefined'){pdf_param = '';}
+				if (title === 'undefined'){title = '';}
+				if (param === 'undefined'){param = '';}
 				
-			
 
-				$(document).on('click', '#'+tId+'_form_xl', function ()
-				{
-
-						//dom_table.trigger('outputTablepe');
-						mydonnee = setup(settings);
-						
-						$("#"+tId+"_data").attr("value", mydonnee['data']);
-						$("#"+tId+"_colonne").attr("value",mydonnee['header']);
-						$("#"+tId+"_titre").attr("value",pdf_title);
-						$("#"+tId+"_param").attr("value",pdf_param);
-						$("#"+tId+"_type").attr("value","excel");
+				$(document).on('click', function (e)
+				{   
+					if($("#param_export").is(e.target) && $('#block').css('display') === 'none')
+					{
+						$('#block').show();
+					}
+					else if((!$("#block").is(e.target)  && $("#block").has(e.target).length === 0 )	
+						 ||($('#block').css('display') === 'block' && $("#param_export").is(e.target))	
+						 ||(!$("#block").is(e.target) && $("#block").has(e.target).length === 0  && !$("#param_export").is(e.target))) 
+					{
+						$('#block').hide();
+					}
 				});
-				$(document).on('click', '#'+tId+'_form_pdf' , function()
+				$(document).on('click', '.parametrage', function ()
 				{
+					if($(this).val()==="mano")
+					{
+						$('.disabler').prop('disabled', false);
+					
+					}
+					else
+					{
+						$('.disabler').prop("disabled", true);
+					}
+				});
+				
+				$(document).on('click', '.form_export', function ()
+				{
+					$('#xl').hide();
+					$('#pdf').hide();
+					$('#'+$(this).val()).show();
+					$('#export_button').val('Export ' + $(this).val());
+				});
 
-					//dom_table.trigger('outputTablepe', true);
+				$(document).on('click', '#export_button', function ()
+				{
 					mydonnee = setup(settings);
-					
-					
+
 					$("#"+tId+"_data").attr("value", mydonnee['data']);
 					$("#"+tId+"_colonne").attr("value",mydonnee['header']);
-					$("#"+tId+"_titre").attr("value",pdf_title);
-					$("#"+tId+"_param").attr("value",pdf_param);
-					$("#"+tId+"_type").attr("value","pdf");
+					$("#"+tId+"_titre").attr("value",title);
+					$("#"+tId+"_param").attr("value",param);
+					if($('#export_button').val()==='Export xl')
+					{
+						$("#"+tId+"_type").attr("value","excel");
+					}
+					else
+					{
+						$("#"+tId+"_type").attr("value","pdf");
+					}
 				});
-	}
-	
+	};
 })(window, document, jQuery);
 
 
