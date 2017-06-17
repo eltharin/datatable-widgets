@@ -9,7 +9,7 @@
 	Init_numColFooter_Widget = function ( settings ) {
 		
 		var virtualArray = [], nbColumn, nbRow, columnArray = [], rows, len;
-		var classes = ['dt-calc-sum','dt-calc-avg','dt-calc-nb'];
+		var classes = ['dt-calc-sum','dt-calc-avg','dt-calc-nb', 'dt-calc-bord'];
 		nbColumn = settings.aoColumns.length;
 		nbRow = settings.nTFoot.childElementCount;
 		rows = settings.aoData;

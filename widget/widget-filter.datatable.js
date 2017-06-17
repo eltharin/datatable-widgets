@@ -10,6 +10,7 @@ $.fn.dataTable.ext.filter = function ( settings ) {
 		iClassFilter : "is_input_customFilter"
 	};
 	settings.zfilter.cols = [];
+	settings.zfilter.selects = [];
 	
 	settings.zfilter.trFilter = $('<tr class="dataTable-research"></tr>');
 	$(settings.nTHead).append(settings.zfilter.trFilter);
@@ -21,8 +22,10 @@ $.fn.dataTable.ext.filter = function ( settings ) {
 			var oClasse = settings.zfilter.oClasse;
 			var trFilter = settings.zfilter.trFilter;
 			var th = getRow(settings);
+			settings.zfilter.th = th;
+			settings.datatableinstance = this;
 			var thLen = th.length;
-			settings.zfilter.trFilter = $('<tr class="dataTable-research"></tr>');
+
 			for (var i = 0; i < thLen; i++)
 			{
 				if(th[i].hasClass('filter-none'))
@@ -34,34 +37,18 @@ $.fn.dataTable.ext.filter = function ( settings ) {
 					settings.zfilter.cols[i] = "";
 					settings.aoPreSearchCols[i].exactSearch = true;
 					var myth = $('<th idx="'+i+'" class="'+oClasse.thClasse+'"></th>').appendTo(trFilter);
-					var column = this.api().column(i);
+					
 					th.push(myth);
 					var select = $('<select class="'+oClasse.sFilter+'"></select>');
+					settings.zfilter.selects[i] = select;
 					
 					select.appendTo(myth).on( 'change', function () {
 						settings.zfilter.cols[$(this).parent().attr('idx')] = $(this).val();
 						settings.oApi._fnReDraw(settings);
+						settings.zfilter.redraw_filters(settings);
 					});
-					
-					var valvide= false;
-					column.data().unique().sort().each( function ( d, j ) 
-					{
-						console.log('coucou');
-						if(d !== null && d !== "" && d !== " ")
-						{
-							select.append( '<option value="'+d+'">'+d+'</option>' );
-						}
-						else
-						{
-							valvide= true;
-						}
-					});
-					
-					if(valvide)
-					{
-						$('<option value="<<vide>>">&lt;&lt;vide&gt;&gt;</option>').prependTo(select);
-					}
-					$('<option value="" selected="selected"></option>').prependTo(select);
+
+					settings.zfilter.get_data_select(i);
 				}
 				else
 				{
@@ -183,6 +170,79 @@ $.fn.dataTable.ext.filter = function ( settings ) {
         }
     );
 	
+	settings.zfilter.get_data_select = function(i)
+	{
+		var column = settings.datatableinstance.api().column(i);
+		var valvide= false;
+		var select = settings.zfilter.selects[i];
+		select.empty();
+		column.data().map(settings.zfilter.convert_filter_data).unique().sort(Intl.Collator().compare).each( function ( d, j )
+		{
+			if(d !== null && d !== "" && d !== " ")
+			{
+				select.append( '<option value="'+d+'">'+d+'</option>' );
+			}
+			else
+			{
+				valvide= true;
+			}
+		});
+
+		if(valvide)
+		{
+			$('<option value="<<vide>>">&lt;&lt;vide&gt;&gt;</option>').prependTo(select);
+		}
+		$('<option value="" selected="selected"></option>').prependTo(select);
+	};
+	
+	settings.zfilter.redraw_filters = function()
+	{
+		settings.zfilter.trFilter.find('option').css('color','black');
+        
+		if(settings.aoData.length != settings.aiDisplay.length)
+		{
+			$(settings.zfilter.selects).each(function( index, mySelect ) {
+			if(mySelect != undefined)
+			{
+				data = [];
+				$(settings.aiDisplay).each(function(a,b){
+					
+					if(settings.aoColumns[index].data != undefined)
+					{
+						val = settings.aoData[b]._aData[settings.aoColumns[index].data];
+					}
+					else
+					{
+						val = settings.aoData[b]._aData[index];
+					}
+					
+					if($.inArray(val,data))
+					{
+						data.push(val);
+					}
+				});
+				
+				data = data.map(settings.zfilter.convert_filter_data);
+
+				mySelect.find('option').each(function(k,v ) {
+						if($.inArray($(v).val(),data) === -1)
+						{
+							$(v).css('color','grey');
+						}					
+					});
+				}
+			});
+		}
+	};
+	settings.zfilter.convert_filter_data = function(a)
+	{
+		if(a === null)
+		{
+			a = '';
+		}
+		
+		return a.toString().replace( /[\r\n]/g, " " ).replace( /<([^>]*)title="([^"]*)"([^>]*)>/g, "$2" ).replace( /<([^>]*)>/g, "" );
+	};
 },
 getRow = function(settings){
 	var tr = $(settings.aoHeader).last().get(0);

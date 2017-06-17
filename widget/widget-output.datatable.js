@@ -27,8 +27,51 @@
 		output.header = header( settings );
 		mydonne['header'] = output.header['name'];
 		mydonne['data'] = body(settings, $rows, output.header['tab_col']);
-
+		mydonne['footer'] = footer(settings);
 		return mydonne;
+	},
+	
+	footer = function( settings )
+	{
+		var oTFoot,index_colonne = 0, tab_show = [], datafooter = [];
+		oTFoot = $(settings.nTFoot);
+		value = '[';
+		
+		oTFoot.children('tr').each(function()
+		{
+			$(this).find('th').each(function () {
+				
+				if($(this).attr('colspan') > 1) {
+
+					if($.isNumeric($(this).attr("colspan")) === false) 
+					{
+						index_colonne += 1;
+					} 
+					else 
+					{
+						index_colonne +=  parseInt($(this).attr("colspan"));
+					}
+				}
+				else if ($(this).attr("rowspan") > 1) 
+				{
+					tab_show.push(index_colonne);
+					index_colonne += 1;
+				} 
+				else if (tab_show.indexOf(index_colonne) !== -1) 
+				{
+						index_colonne += 2;
+				} 
+				else 
+				{
+						index_colonne += 1;
+				}
+				value += '{\"value\":\"' + $(this).text() + '\",\"colspan\":\"' + parseInt($(this).attr("colspan")) + '\",\"rowspan\":\"' + parseInt($(this).attr("rowspan")) + '\"},';
+			});
+			value = value.substr(0, (value.length - 1)) + "],[";
+			
+		});
+		value = "[" + value.substr(0, (value.length - 2)) + "]";
+		return value;
 	},
 	
 
@@ -74,10 +117,14 @@
 
 
 
-					if ($(this).attr("align") === undefined) {
-						align = "L";
+					if ($(this).data("align") === undefined) {
+						if ($(this).attr("align") === undefined) {
+							align = "C";
+						} else {
+							align = $(this).attr("align");
+						}
 					} else {
-						align = $(this).attr("align");
+						align = $(this).data("align");
 					}
 
 					if ($.isNumeric($(this).attr("colspan")) === false) {
@@ -178,7 +225,6 @@
 			{
 				for (var i=0; i< $(settings.aoColumns).length; i++) 
 				{
-					
 					if($rows[rowIndex]._aData[settings.aoColumns[i].data])
 					{
 						if($rows[rowIndex]._aData[settings.aoColumns[i].data] === null)
@@ -257,6 +303,7 @@
 		dom_table.before('<form method="POST" action= "/exporttable/export" id="form_output" ENCTYPE="multipart/form-data">'+
 								'<input type=hidden id="'+tId+'_colonne" name="colonne" value = "" >'+
 								'<input type=hidden id="'+tId+'_data" name="data" value = "" >'+
+								'<input type=hidden id="'+tId+'_footer" name="footer" value = "" >'+
 								'<input type=hidden id="'+tId+'_param" name="param" value = "" >'+
 								'<input type=hidden id="'+tId+'_titre" name="titre" value = "" >'+
 								'<input type=hidden id="'+tId+'_type" name="type" value = "" >'+
@@ -337,6 +384,7 @@
 
 					$("#"+tId+"_data").attr("value", mydonnee['data']);
 					$("#"+tId+"_colonne").attr("value",mydonnee['header']);
+					$("#"+tId+"_footer").attr("value",mydonnee['footer']);
 					$("#"+tId+"_titre").attr("value",title);
 					$("#"+tId+"_param").attr("value",param);
 					if($('#export_button').val()==='Export xl')

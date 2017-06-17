@@ -44,7 +44,7 @@
 					pager : $('<form  class="pagerDataTable">'),
 					IFirst : $('<img src="/pics/icons/first.png" class="first"/>'),
 					IPrevious : $('<img src="/pics/icons/prev.png" class="prev"/>'),
-					SPages : $('<select class="pagerDataTable_page" class="pagerdataTable_page_number"></select>'),
+					SPages : $('<select class="pagerDataTable_page pagerdataTable_page_number"></select>'),
 					INext : $('<img  src="/pics/icons/next.png" class="next"/>'),
 					ILast : $('<img  src="/pics/icons/last.png" class="last"/>'),
 					SOptions : []

@@ -20,6 +20,7 @@
 					columnResult[data.num]['global'] = {value : 0, nb: 0};
 					columnResult[data.num]['view'] = {value : 0, nb: 0};
 					columnResult[data.num]['filter'] = {value : 0, nb: 0};
+					columnResult[data.num]['bord'] = {max : 0, min: 0};
 				}
 				
 				$(settings.aiDisplay).each(function(ind, d)
@@ -48,8 +49,16 @@
 						{
 							columnResult[data.num]['view'].value += parseFloat(rows[i]._aData[data.nom]);
 						}
-						
 						columnResult[data.num]['global'].value += parseFloat(rows[i]._aData[data.nom]);
+						if(parseFloat(rows[i]._aData[data.nom]) > columnResult[data.num]['bord'].max)
+						{
+							columnResult[data.num]['bord'].max = parseFloat(rows[i]._aData[data.nom]);
+						}
+						if(parseFloat(rows[i]._aData[data.nom]) < columnResult[data.num]['bord'].min)
+						{
+							columnResult[data.num]['bord'].min = parseFloat(rows[i]._aData[data.nom]);
+						}
+						
 					}
 				});
 			}
@@ -59,9 +68,10 @@
 				columnResult[data.num]['global'].value = columnResult[data.num]['global'].value.toFixed(2);
 				columnResult[data.num]['view'].value = columnResult[data.num]['view'].value.toFixed(2);
 				columnResult[data.num]['filter'].value = columnResult[data.num]['filter'].value.toFixed(2);
+				columnResult[data.num]['bord'].min = columnResult[data.num]['bord'].min.toFixed(2);
+				columnResult[data.num]['bord'].max = columnResult[data.num]['bord'].max.toFixed(2);
 			});
-
-
+			
 			$('.dt-calc-sum').each(function (ind, d)
 			{
 				valsum = null;
@@ -83,7 +93,7 @@
 				
 				if (valsum !== null)
 				{
-					if(settings.aoColumns[$(this).data('numCol')].render.display !== undefined)
+					if(settings.aoColumns[$(this).data('numCol')].render !== undefined)
 					{
 						$(this).html(settings.aoColumns[$(this).data('numCol')].render.display(valsum));
 					}
@@ -131,7 +141,7 @@
 				
 				if (average !== null)
 				{
-					if(settings.aoColumns[$(this).data('numCol')].render.display !== undefined)
+					if(settings.aoColumns[$(this).data('numCol')].render !== undefined)
 					{
 						$(this).html(settings.aoColumns[$(this).data('numCol')].render.display(average));
 					}
@@ -141,6 +151,32 @@
 					}
 				}
 			});
+			
+			$('.dt-calc-bord').each(function (ind, d)
+			{
+				if($(this).hasClass('dt-min'))
+				{
+					bord = columnResult[$(this).data('numCol')]['bord'].min;
+				}
+				
+				if($(this).hasClass('dt-max'))
+				{
+					bord = columnResult[$(this).data('numCol')]['bord'].max;
+				}
+				
+				if (bord !== null)
+				{
+					if(settings.aoColumns[$(this).data('numCol')].render !== undefined)
+					{
+						$(this).html(settings.aoColumns[$(this).data('numCol')].render.display(bord));
+					}
+					else
+					{
+						$(this).html(bord);
+					}
+				}
+			});
+			
 		};
 	
 })(window, document, jQuery);

@@ -47,7 +47,7 @@
 			} ) ;
 
 		oSettings.cLengthMenu.out = out.toString().replace(/\,/g,'');
-		oSettings.cLengthMenu.LSelect = "<select class=\"change_lengthOfPager\" aria-controls=\"datatable\" name=\"datatable_length\">"+out+"</select>";
+		oSettings.cLengthMenu.LSelect = "<select class=\"change_lengthOfPager\" aria-controls=\"datatable\">"+out+"</select>";
 		oSettings.cLengthMenu.LSelect = jQuery.makeArray(oSettings.cLengthMenu.LSelect);
 		oSettings.oLanguage.sLengthMenu = "_MENU_"; 
 	},

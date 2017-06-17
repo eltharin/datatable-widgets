@@ -11,7 +11,9 @@ $.fn.dataTable.defaults.paging = true;
 $.fn.dataTable.defaults.autoWidth = false;
 //$.fn.dataTable.defaults.lengthChange = false;
 $.fn.dataTable.defaults.sDom = "tFipL";
+$.fn.dataTable.defaults.aaSorting = [];
 $.fn.dataTable.defaults.aoColumnDefs=tableRender;
+
 
 
 
@@ -73,48 +75,27 @@ jQuery.extend( jQuery.fn.dataTableExt.oSort,
 {
 	"date-pre": function ( date ) 
 	{
-		var date = date.replace(" ", "").replace( /<.*?>/g, "" );
+		var date = date.replace( /<.*?>/g, "" );
 		if(date.length > 0)
 		{
-			if (date.indexOf('.') > 0) {var eu_date = date.split('.');} 
-			else if (date.indexOf('-') > 0) {var eu_date = date.split('-');} 
-			else {var eu_date = date.split('/');}
-
-			/*year*/
-			if (eu_date[2]) 
+			var pattern = new RegExp(/^(([0-9]{2})[\/\-\.]([0-9]{2})[\/\-\.](\d{4}))(\s{1}(\d{2}):(\d{2})(:(\d{2}))?)?/);
+			var match = pattern.exec(date); 
+			if(match !== null)
 			{
-				var year = eu_date[2];
-			} 
-			else 
-			{
-				var year = '0000';
+				console.log(match);
+				if(match[4]) {year  = match[4];} else {year = '0000';}
+				if(match[3]) {month = match[3];} else {month = '00';}
+				if(match[2]) {day   = match[2];} else {day = '00';}
+				if(match[6]) {hour  = match[6];} else {hour = '00';}
+				if(match[7]) {minut = match[7];} else {minut = '00';}
+				if(match[9]) {second = match[9];} else {second = '00';}
+				
+				return (year + '-' + month + '-' + day + ' ' + hour + ':' + minut + ':' + second);
 			}
 
-			/*month*/
-			if (eu_date[1]) 
-			{
-				var month = eu_date[1];
-				if (month.length === 1) 
-				{
-					month = "0" + month;
-				}
-			} 
-			else 
-			{
-				var month = '00';
-			}
 
-			/*day*/
-			var day = eu_date[0];
-			if (day.length === 1) 
-			{
-				day = "0" + day;
-			}
-
-			return (year + '-' + month + '-' + day);
 		}
-
-		return ('0000-00-00');
+		return ('0000-00-00 00:00:00');
 	},
 	"date-asc": function ( a, b ) 
 	{
@@ -128,6 +109,10 @@ jQuery.extend( jQuery.fn.dataTableExt.oSort,
 
 $.fn.dataTableExt.ofnSearch['date'] = function ( date ) {
 return date.replace( /<.*?>/g, "" );
+};
+
+$.fn.dataTableExt.ofnSearch['favoris'] = function ( date ) {
+return date.replace( /<([^>]*)title="([^"]*)"([^>]*)>/g, "$2" ).replace( /<([^>]*)>/g, "" );
 };
 
 
@@ -154,3 +139,24 @@ $.fn.dataTableExt.oApi.fnLoadJSON = function ( oSettings,data)
 	oSettings.oApi._fnReDraw(oSettings,true);
 };
 
+$.fn.dataTableExt.oApi.fnGetAllObject = function ( oSettings,formid,object)
+{
+	var myobj=[];
+	
+	console.log('coucou ' + object);
+	$(oSettings.aoData).each(function(k){
+		$(this.nTr).find(object).each(function(){
+				myobj.push(this);
+		});
+		
+		//console.log(myobj.attr('name') + " - " + myobj.val());
+		//$(formid).append('<input type="hidden" name="" value="">')
+	});
+	return myobj;
+}
+$.fn.dataTableExt.oApi.fnGetObject = function ( oSettings)
+{
+	console.log(oSettings);
+	oSettings.oApi._fnLengthChange(oSettings,-1);
+	oSettings.oApi._fnReDraw(oSettings,true);
+}
